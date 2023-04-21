@@ -6,6 +6,7 @@ from electrum.gui.qt.main_window import ElectrumWindow
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 from PyQt5.QtCore import Qt
 
+# Defining the class
 class Plugin(BasePlugin):
 
 # Hook called when a wallet is loaded in Electrum
