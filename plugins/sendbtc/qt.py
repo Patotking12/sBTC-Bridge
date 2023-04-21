@@ -1,3 +1,4 @@
+# importing required modules
 import os
 from electrum.plugin import BasePlugin, hook
 from electrum.i18n import _
