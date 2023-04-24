@@ -1,31 +1,25 @@
-# importing required modules
 import os
 from electrum.plugin import BasePlugin, hook
+from electrum.bitcoin import is_address
 from electrum.i18n import _
-from electrum.gui.qt.util import WindowModalDialog
+from electrum.gui.qt.util import WindowModalDialog, EnterButton
 from electrum.gui.qt.main_window import ElectrumWindow
+from electrum.util import format_satoshis_plain
+from electrum.wallet import InternalAddressCorruption
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 from PyQt5.QtCore import Qt
 
-# Defining the class
 class Plugin(BasePlugin):
 
-# Hook called when a wallet is loaded in Electrum
     @hook
     def load_wallet(self, wallet, window: ElectrumWindow):
-        # Add a new tab to the main window
-        window.tabs.addTab(self.create_price_tab(window), _('Send BTC'))
+        window.tabs.addTab(self.create_send_tab(window), _('Send BTC'))
 
-    # Create the tab containing the Bitcoin price
-    def create_price_tab(self, window):
-        # Create a new widget with the main window as its parent
+    def create_send_tab(self, window):
         widget = WindowModalDialog(window, _('Send BTC'))
-        # Remove the "Dialog" flag to make the widget act like a regular tab
         widget.setWindowFlags(widget.windowFlags() & ~Qt.Dialog)
-        # Create a layout for the widget
         vbox = QVBoxLayout(widget)
 
-        # Create input fields for amount and address
         vbox.addWidget(QLabel(_("Amount (BTC):")))
         self.amount_input = QLineEdit()
         vbox.addWidget(self.amount_input)
@@ -34,22 +28,43 @@ class Plugin(BasePlugin):
         self.address_input = QLineEdit()
         vbox.addWidget(self.address_input)
 
-        # Create a button to initiate the transaction
-        send_button = QPushButton(_('Send'))
-        send_button.clicked.connect(self.send_btc)
+        vbox.addWidget(QLabel(_("Estimated Fee (BTC):")))
+        self.fee_label = QLabel()
+        vbox.addWidget(self.fee_label)
+
+        send_button = EnterButton(_('Send'), lambda: self.send_btc(window))
         vbox.addWidget(send_button)
 
         return widget
 
-    def send_btc(self):
-        try:
-            amount_btc = float(self.amount_input.text())
-            recipient_address = self.address_input.text()
+        def send_btc(self, window):
+            try:
+                amount_btc = float(self.amount_input.text())
+                recipient_address = self.address_input.text()
 
-            # TODO: Validate the amount and recipient address, and initiate the transaction.
-            # You will need to use the wallet and network APIs to perform the transaction.
+                if not is_address(recipient_address):
+                    raise ValueError("Invalid recipient address")
 
-            QMessageBox.information(None, _('Transaction Success'), _('BTC sent successfully!'))
-        except Exception as e:
-            QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+                amount_sat = int(amount_btc * 1e8)
+                wallet = window.wallet
+                fee_per_kb = wallet.config.fee_per_kb()
+                fee = wallet.config.estimate_fee_for_feerate(fee_per_kb, amount_sat)
+                fee_btc = fee / 1e8
+
+                self.fee_label.setText(f"{fee_btc:.8f}")
+
+                outputs = [('address', recipient_address, amount_sat)]
+
+                coins = wallet.get_spendable_coins(None)
+                tx = wallet.make_unsigned_transaction(coins, outputs, window.config, fee=fee)
+                wallet.sign_transaction(tx)
+                tx_hash = window.network.broadcast_transaction(tx)
+
+                QMessageBox.information(None, _('Transaction Success'), _('BTC sent successfully! Transaction ID: {}').format(tx_hash))
+            except ValueError as e:
+                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+            except InternalAddressCorruption as e:
+                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+            except Exception as e:
+                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
 
