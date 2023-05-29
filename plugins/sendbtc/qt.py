@@ -6,10 +6,13 @@ from electrum.gui.qt.util import WindowModalDialog, EnterButton
 from electrum.gui.qt.main_window import ElectrumWindow
 from electrum.util import format_satoshis_plain
 from electrum.wallet import InternalAddressCorruption
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
+from electrum.transaction import PartialTxOutput
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox, QInputDialog
 from PyQt5.QtCore import Qt
 
 class Plugin(BasePlugin):
+    def __init__(self, parent, config, name):
+        super().__init__(parent, config, name)
 
     @hook
     def load_wallet(self, wallet, window: ElectrumWindow):
@@ -32,39 +35,48 @@ class Plugin(BasePlugin):
         self.fee_label = QLabel()
         vbox.addWidget(self.fee_label)
 
-        send_button = EnterButton(_('Send'), lambda: self.send_btc(window))
+        send_button = EnterButton(_('Send'), lambda: self.prompt_password(window))
         vbox.addWidget(send_button)
 
         return widget
 
-        def send_btc(self, window):
-            try:
-                amount_btc = float(self.amount_input.text())
-                recipient_address = self.address_input.text()
+    def prompt_password(self, window):
+        password, ok = QInputDialog.getText(None, _('Enter Password'), _('Please enter your password'), QLineEdit.Password)
+        if ok:
+            self.send_btc(window, password)
 
-                if not is_address(recipient_address):
-                    raise ValueError("Invalid recipient address")
+    def send_btc(self, window, password):
+        try:
+            amount_btc = float(self.amount_input.text())
+            recipient_address = self.address_input.text()
 
-                amount_sat = int(amount_btc * 1e8)
-                wallet = window.wallet
-                fee_per_kb = wallet.config.fee_per_kb()
-                fee = wallet.config.estimate_fee_for_feerate(fee_per_kb, amount_sat)
-                fee_btc = fee / 1e8
+            if not is_address(recipient_address):
+                raise ValueError("Invalid recipient address")
 
-                self.fee_label.setText(f"{fee_btc:.8f}")
+            amount_sat = int(amount_btc * 1e8)
+            wallet = window.wallet
+            fee_per_kb = 200
+            fee = wallet.config.estimate_fee_for_feerate(fee_per_kb, amount_sat)
+            fee_btc = fee / 1e8
 
-                outputs = [('address', recipient_address, amount_sat)]
+            self.fee_label.setText(f"{fee_btc:.8f}")
 
-                coins = wallet.get_spendable_coins(None)
-                tx = wallet.make_unsigned_transaction(coins, outputs, window.config, fee=fee)
-                wallet.sign_transaction(tx)
-                tx_hash = window.network.broadcast_transaction(tx)
+            output = PartialTxOutput.from_address_and_value(recipient_address, amount_sat)
+            outputs = [output]
 
-                QMessageBox.information(None, _('Transaction Success'), _('BTC sent successfully! Transaction ID: {}').format(tx_hash))
-            except ValueError as e:
-                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
-            except InternalAddressCorruption as e:
-                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
-            except Exception as e:
-                QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+            coins = wallet.get_spendable_coins(None)
+            tx = wallet.make_unsigned_transaction(coins=coins, outputs=outputs, fee=fee, rbf=True)
+            wallet.sign_transaction(tx, str(password))
+            tx_hash = window.network.run_from_another_thread(window.network.broadcast_transaction(tx))
+            
+            if tx_hash:
+                wallet.add_transaction(tx_hash, tx)
+                wallet.save_db()
 
+            QMessageBox.information(None, _('Transaction Success'), _('Transaction Success! Strata Labs Rules!!'))
+        except ValueError as e:
+            QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+        except InternalAddressCorruption as e:
+            QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
+        except Exception as e:
+            QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
