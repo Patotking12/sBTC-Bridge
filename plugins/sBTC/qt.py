@@ -5,7 +5,7 @@ from electrum.i18n import _
 import requests
 
 class BalanceFetcher(QThread):
-    balanceFetched = pyqtSignal(str, int)
+    balanceFetched = pyqtSignal(str, float)
 
     def __init__(self, address):
         super().__init__()
@@ -16,17 +16,20 @@ class BalanceFetcher(QThread):
         self.balanceFetched.emit(self.address, balance)
 
     def get_balance(self, address):
+        print(address)
         try:
-            response = requests.get(f'https://mempool.space/api/address/{address}')
+            response = requests.get(f'https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/address/{address}/balance')
+            print(response)
+            print(response.text)  # Print the response content
             data = response.json()
-            balance_satoshi = data['chain_stats']['funded_txo_sum']
-            print(f"Balance in satoshi: {balance_satoshi}")  # Print balance in satoshi for debugging
-            balance_btc = balance_satoshi / 100000000.0  # Convert Satoshis to Bitcoins
-            print(f"Balance in BTC: {balance_btc}")  # Print balance in bitcoin for debugging
-            return balance_btc
+            print(data)
+            balance = data['balance']
+            return balance
         except Exception as e:
             print(f"Failed to fetch balance for address {address}: {e}")
             return 0
+
+
 
 class Plugin(BasePlugin):
     def __init__(self, parent, config, name):
@@ -80,8 +83,8 @@ class SBTC_Tab(QWidget):
         vbox.addWidget(self.stx_address_input)
 
         vbox.addWidget(QLabel(_("sBTC wallet:")))
-        self.fee_label = QLabel()
-        vbox.addWidget(self.fee_label)
+        self.wallet_address_label = QLabel()
+        vbox.addWidget(self.wallet_address_label)
 
         vbox.addWidget(QLabel(_("Transaction Fee:")))
         self.fee_label = QLabel()
@@ -94,8 +97,23 @@ class SBTC_Tab(QWidget):
         self.tx_status_label = QLabel()
         vbox.addWidget(self.tx_status_label)
 
+        # Fetch and display the sBTC wallet address
+        wallet_address = self.fetch_sbtc_wallet_address()
+        self.wallet_address_label.setText(wallet_address)
+
         widget.setLayout(vbox)
         return widget
+
+    def fetch_sbtc_wallet_address(self):
+        try:
+            response = requests.get('https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/data')
+            data = response.json()
+            wallet_address = data['sbtcWalletAddress']
+            return wallet_address
+        except Exception as e:
+            print(f"Failed to fetch sBTC wallet address: {e}")
+            return "N/A"
+
 
     def deposit_btc(self):
         pass
@@ -221,17 +239,15 @@ class SBTC_Tab(QWidget):
 
         if address in self.balance_btc:  # Display the balance if already fetched
             balance = self.balance_btc[address]
-            print(f"balance in add address: {balance}")
             self.summary_table.setItem(self.summary_table.rowCount() - 1, 1, QTableWidgetItem(str(balance)))
+
 
     def update_balance(self, address, balance):
         self.balance_btc[address] = float(balance)  # Update the balance_btc dictionary
-        print(f"this is balance: {balance}")
 
         for i in range(self.summary_table.rowCount()):
             if self.summary_table.item(i, 0).text() == address:
                 btc_balance_item = QTableWidgetItem(str(balance))
-                print(f"this is btc_balance_item: {btc_balance_item}") # Create a QTableWidgetItem with the balance as a string
                 self.summary_table.setItem(i, 1, btc_balance_item)  # Set the QTableWidgetItem in the "BTC Balance" column
                 break
 
