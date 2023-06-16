@@ -68,7 +68,7 @@ class SBTC_Tab(QWidget):
         reclaim_withdrawal_tab = self.create_reclaim_withdrawal_tab(window) 
         reveal_withdrawal_tab = self.create_reveal_withdrawal_tab(window) 
         summary_tab = self.create_summary_tab(window)
-        tx_history_tab = self.create_tx_history_tab(window)
+        tx_history_peg_in_tab = self.create_tx_history_peg_in_tab(window)
 
         tab_widget.addTab(deposit_tab, "Deposit")
         tab_widget.addTab(reclaim_deposit_tab, "Reclaim Deposit")  
@@ -77,7 +77,7 @@ class SBTC_Tab(QWidget):
         tab_widget.addTab(reclaim_withdrawal_tab, "Reclaim Withdrawal")
         tab_widget.addTab(reveal_withdrawal_tab, "Reveal Withdrawal")
         tab_widget.addTab(summary_tab, "Summary")
-        tab_widget.addTab(tx_history_tab, "Tx History")
+        tab_widget.addTab(tx_history_peg_in_tab, "Tx history peg in")
 
         layout.addWidget(tab_widget)
         self.setLayout(layout)
@@ -139,45 +139,44 @@ class SBTC_Tab(QWidget):
 
         self.fetch_and_store_keys()
 
-        self.create_script()
-
+        # self.create_script()
 
         widget.setLayout(vbox)
         return widget
 
-    def create_script(self):
-        data = self.buildData(self.pegInData.stacksAddress, True)
-        stacks_address = self.stx_address_input.text()
-        reveal_pub_key = bitcoinlib.hex.decode(self.reveal_pub_key)
-        reclaim_pub_key = bitcoinlib.hex.decode(self.reclaim_pub_key)
+    # def create_script(self):
+    #     data = self.buildData(self.pegInData.stacksAddress, True)
+    #     stacks_address = self.stx_address_input.text()
+    #     reveal_pub_key = bitcoinlib.hex.decode(self.reveal_pub_key)
+    #     reclaim_pub_key = bitcoinlib.hex.decode(self.reclaim_pub_key)
 
-        # Build the script for the first case
-        script1 = [
-            data,
-            'DROP',
-            bitcoinlib.hex.decode(reveal_pub_key),
-            'CHECKSIG'
-        ]
-        script1_encoded = bitcoinlib.Script.encode(script1)
-        print(script1_encoded)
+    #     # Build the script for the first case
+    #     script1 = [
+    #         data,
+    #         'DROP',
+    #         bitcoinlib.hex.decode(reveal_pub_key),
+    #         'CHECKSIG'
+    #     ]
+    #     script1_encoded = bitcoinlib.Script.encode(script1)
+    #     print(script1_encoded)
 
-        # Build the script for the second case
-        script2 = [
-            bitcoinlib.hex.decode(reclaim_pub_key),
-            'CHECKSIG'
-        ]
-        script2_encoded = bitcoinlib.Script.encode(script2)
-        print(script2_encoded)
+    #     # Build the script for the second case
+    #     script2 = [
+    #         bitcoinlib.hex.decode(reclaim_pub_key),
+    #         'CHECKSIG'
+    #     ]
+    #     script2_encoded = bitcoinlib.Script.encode(script2)
+    #     print(script2_encoded)
 
-        # Build the final scripts array
-        scripts = [
-            {"script": script1_encoded},
-            {"script": script2_encoded}
-        ]
+    #     # Build the final scripts array
+    #     scripts = [
+    #         {"script": script1_encoded},
+    #         {"script": script2_encoded}
+    #     ]
 
-        # Build the final script
-        script = bitcoinlib.p2tr(bitcoinlib.TAPROOT_UNSPENDABLE_KEY, scripts, bitcoinlib.Network.TESTNET, True)
-        print(script)
+    #     # Build the final script
+    #     script = bitcoinlib.p2tr(bitcoinlib.TAPROOT_UNSPENDABLE_KEY, scripts, bitcoinlib.Network.TESTNET, True)
+    #     print(script)
 
     def fetch_and_store_keys(self):
         try:
@@ -441,16 +440,96 @@ class SBTC_Tab(QWidget):
     def cleanup(self, fetcher):
         self.fetchers.remove(fetcher)
 
-    def create_tx_history_tab(self, window):
+    def create_tx_history_peg_in_tab(self, window):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
 
-        vbox.addWidget(QLabel(_("Tx History")))
+        vbox.addWidget(QLabel(_("Tx history peg in")))
 
-        self.tx_history_table = QTableWidget()
-        self.tx_history_table.setColumnCount(7)
-        self.tx_history_table.setHorizontalHeaderLabels(["Date", "From", "To", "Amount", "Tx ID stx", "Tx ID btc", "Status"])
-        vbox.addWidget(self.tx_history_table)
+        self.tx_history_peg_in_table = QTableWidget()
+        self.tx_history_peg_in_table.setColumnCount(8)
+        self.tx_history_peg_in_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status"])
+        vbox.addWidget(self.tx_history_peg_in_table)
+
+        add_address_button = QPushButton("Add Address")
+        add_address_button.clicked.connect(self.add_address_tx_history_peg_in)
+        vbox.addWidget(add_address_button)
+
+        remove_address_button = QPushButton("Remove Address")
+        remove_address_button.clicked.connect(self.remove_address_tx_history_peg_in)
+        vbox.addWidget(remove_address_button)
+
+        refresh_button = QPushButton("Refresh")
+        refresh_button.clicked.connect(self.refresh_tx_history_peg_in)
+        vbox.addWidget(refresh_button)
 
         widget.setLayout(vbox)
         return widget
+
+    def add_address_tx_history_peg_in(self):
+        address_tx_history_peg_in, ok = QInputDialog.getText(self, "Add Address", "Enter an address:")
+        if ok:
+            self.tx_history_peg_in_table.insertRow(self.tx_history_peg_in_table.rowCount())
+            self.tx_history_peg_in_table.setItem(self.tx_history_peg_in_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_in))
+
+    def fetch_tx_history_peg_in(self, address_tx_history_peg_in):
+        print("fetching Tx history peg in")
+        print(address_tx_history_peg_in)
+        url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_in}"
+        print(url_history)
+        response_history = requests.get(url_history)
+        print("response", response_history)
+        data_history = response_history.json()
+        print("data", data_history)
+
+
+        print("fetching transactions")
+        if isinstance(data_history, list):
+            # Handle the case where data is a list
+            transactions = data_history
+        elif isinstance(data_history, dict):
+            # Handle the case where data is a dictionary
+            transactions = data_history.get('transactions', [])
+        else:
+            transactions = []
+        
+        print(transactions)
+
+        # Set the number of rows based on the number of transactions
+        self.tx_history_peg_in_table.setRowCount(len(transactions))
+
+        # Populate the table with transaction data
+        for row, transaction in enumerate(transactions):
+            # Extracting the required fields: _id, originator, fromBtcAddress, amount, commitTxScript.address
+            _id = transaction.get('_id', '')
+            print("id", _id)
+            originator = transaction.get('originator', '')
+            print("originator", originator)
+            fromBtcAddress = transaction.get('fromBtcAddress', '')
+            amount = transaction.get('amount', '')
+            commitTxScript_address = transaction.get('commitTxScript', {}).get('address', '')
+            type_ = transaction.get('requestType')
+            status_tx = transaction.get('status')
+            print(status_tx)
+
+            # Inserting the extracted data into the table
+            self.tx_history_peg_in_table.setItem(row, 0, QTableWidgetItem(_id))
+            self.tx_history_peg_in_table.setItem(row, 1, QTableWidgetItem(originator))
+            self.tx_history_peg_in_table.setItem(row, 2, QTableWidgetItem(fromBtcAddress))
+            self.tx_history_peg_in_table.setItem(row, 3, QTableWidgetItem(str(amount)))
+            self.tx_history_peg_in_table.setItem(row, 4, QTableWidgetItem(commitTxScript_address))
+            self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(str(type_)))
+            self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_tx))
+
+
+    def remove_address_tx_history_peg_in(self):
+        current_row_tx_history_peg_in = self.tx_history_peg_in_table.currentRow()
+        self.tx_history_peg_in_table.removeRow(current_row_tx_history_peg_in)
+
+    def refresh_tx_history_peg_in(self):
+        # Assuming you have the addresses stored in the table
+        for row in range(self.tx_history_peg_in_table.rowCount()):
+            address = self.tx_history_peg_in_table.item(row, 0).text()
+            self.fetch_tx_history_peg_in(address)
+
+
