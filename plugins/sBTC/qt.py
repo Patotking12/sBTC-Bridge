@@ -1,5 +1,6 @@
 import requests
 import os
+import bitcoinlib
 from electrum.plugin import BasePlugin, hook
 from electrum.bitcoin import is_address
 from electrum.i18n import _
@@ -9,7 +10,6 @@ from electrum.wallet import InternalAddressCorruption
 from electrum.transaction import PartialTxOutput
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QWidget, QTabWidget, QInputDialog, QComboBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-
 
 class BalanceFetcher(QThread):
     balancesFetched = pyqtSignal(str, float, float)
@@ -137,8 +137,65 @@ class SBTC_Tab(QWidget):
         btc_wallet_address = self.fetch_btc_wallet_address(window)
         self.btc_wallet_address_label.setText(btc_wallet_address)
 
+        self.fetch_and_store_keys()
+
+        self.create_script()
+
+
         widget.setLayout(vbox)
         return widget
+
+    def create_script(self):
+        data = self.buildData(self.pegInData.stacksAddress, True)
+        stacks_address = self.stx_address_input.text()
+        reveal_pub_key = bitcoinlib.hex.decode(self.reveal_pub_key)
+        reclaim_pub_key = bitcoinlib.hex.decode(self.reclaim_pub_key)
+
+        # Build the script for the first case
+        script1 = [
+            data,
+            'DROP',
+            bitcoinlib.hex.decode(reveal_pub_key),
+            'CHECKSIG'
+        ]
+        script1_encoded = bitcoinlib.Script.encode(script1)
+        print(script1_encoded)
+
+        # Build the script for the second case
+        script2 = [
+            bitcoinlib.hex.decode(reclaim_pub_key),
+            'CHECKSIG'
+        ]
+        script2_encoded = bitcoinlib.Script.encode(script2)
+        print(script2_encoded)
+
+        # Build the final scripts array
+        scripts = [
+            {"script": script1_encoded},
+            {"script": script2_encoded}
+        ]
+
+        # Build the final script
+        script = bitcoinlib.p2tr(bitcoinlib.TAPROOT_UNSPENDABLE_KEY, scripts, bitcoinlib.Network.TESTNET, True)
+        print(script)
+
+    def fetch_and_store_keys(self):
+        try:
+            url = "https://testnet.stx.eco/bridge-api/testnet/v1/btc/tx/keys"
+            response = requests.get(url)
+            data = response.json()
+            reveal_pub_key = data['deposits']['revealPubKey']
+            reclaim_pub_key = data['deposits']['reclaimPubKey']
+            print("reveal", reveal_pub_key)
+            print("reclaim", reclaim_pub_key)
+
+            # Store the keys for later use (you can choose how to store them)
+            self.reveal_pub_key = reveal_pub_key
+            self.reclaim_pub_key = reclaim_pub_key
+
+            print("Keys fetched and stored successfully!")
+        except Exception as e:
+            print(f"Failed to fetch and store keys: {e}")
 
     def fetch_fee_estimates(self):
         try:
@@ -162,8 +219,21 @@ class SBTC_Tab(QWidget):
     def fetch_btc_wallet_address(self, window):
         try:
             wallet = window.wallet  # Get the wallet object
-            address = wallet.get_addresses()[0]  # Get the first address from the wallet
-            return address
+            addresses = wallet.get_addresses()  # Get all addresses from the wallet
+            max_balance = 0
+            address_with_max_balance = None
+
+            for address in addresses:
+                balance_tuple = wallet.get_addr_balance(address)
+                balance = balance_tuple[0]  # Access the confirmed balance from the tuple
+                if balance > max_balance:
+                    max_balance = balance
+                    address_with_max_balance = address
+
+            print("Address with the largest balance:", address_with_max_balance)
+            print("Largest balance:", max_balance)
+            return address_with_max_balance
+
         except Exception as e:
             print(f"Failed to fetch BTC wallet address: {e}")
             return "N/A"
