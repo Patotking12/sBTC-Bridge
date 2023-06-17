@@ -87,13 +87,9 @@ class SBTC_Tab(QWidget):
         tab_widget = QTabWidget()
 
         deposit_tab = self.create_deposit_tab(window)
-        reclaim_deposit_tab = self.create_reclaim_deposit_tab(window)
-        reveal_deposit_tab = self.create_reveal_deposit_tab(window)
         tx_history_peg_in_tab = self.create_tx_history_peg_in_tab(window)
 
         tab_widget.addTab(deposit_tab, "Deposit BTC")
-        tab_widget.addTab(reclaim_deposit_tab, "Reclaim Deposit")
-        tab_widget.addTab(reveal_deposit_tab, "Reveal Deposit")
         tab_widget.addTab(tx_history_peg_in_tab, "Tx history peg in")
 
         vbox.addWidget(tab_widget)
@@ -107,13 +103,9 @@ class SBTC_Tab(QWidget):
         tab_widget = QTabWidget()
 
         withdraw_tab = self.create_withdraw_tab(window)
-        reclaim_withdraw_tab = self.create_reclaim_withdrawal_tab(window)
-        reveal_withdraw_tab = self.create_reveal_withdrawal_tab(window)
         tx_history_peg_out_tab = self.create_tx_history_peg_out_tab(window)
 
         tab_widget.addTab(withdraw_tab, "Withdraw BTC")
-        tab_widget.addTab(reclaim_withdraw_tab, "Reclaim Withdraw")
-        tab_widget.addTab(reveal_withdraw_tab, "Reveal Withdraw")
         tab_widget.addTab(tx_history_peg_out_tab, "Tx history peg out")
 
         vbox.addWidget(tab_widget)
@@ -297,33 +289,7 @@ class SBTC_Tab(QWidget):
             # If there was an error, display a message box with the error
             QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
 
-    def create_reclaim_deposit_tab(self, window):
-        widget = QWidget()
-        vbox = QVBoxLayout(widget)
-
-        vbox.addWidget(QLabel(_("144 blocks passed and your Deposit wasn't revealed. You can reclaim here.")))
-
-        reclaim_button = QPushButton(_("Reclaim Deposit"))
-        reclaim_button.clicked.connect(self.reclaim_deposit)
-        vbox.addWidget(reclaim_button)
-
-        widget.setLayout(vbox)
-        return widget
-
     def reclaim_deposit(self):
-        # Handle reclaiming of deposit here
-        pass
-
-    def create_reveal_deposit_tab(self, window):
-        widget = QWidget()
-        vbox = QVBoxLayout(widget)
-
-        vbox.addWidget(QLabel(_("144 blocks passed and your Deposit was revealed! Here is you TxID! *****************************************")))
-
-        widget.setLayout(vbox)
-        return widget
-
-    def reveal_deposit(self):
         # Handle reclaiming of deposit here
         pass
 
@@ -349,34 +315,8 @@ class SBTC_Tab(QWidget):
     def withdraw_sbtc(self):
         pass
 
-    def create_reclaim_withdrawal_tab(self, window):
-        widget = QWidget()
-        vbox = QVBoxLayout(widget)
-
-        vbox.addWidget(QLabel(_("144 blocks passed and your Withdrawal wasn't revealed. You can reclaim here.")))
-
-        reclaim_withdrawal_button = QPushButton(_("Reclaim Withdrawal"))
-        reclaim_withdrawal_button.clicked.connect(self.reclaim_withdrawal)
-        vbox.addWidget(reclaim_withdrawal_button)
-
-        widget.setLayout(vbox)
-        return widget
-
     def reclaim_withdrawal(self):
-        # Handle reclaiming of deposit here
-        pass
-
-    def create_reveal_withdrawal_tab(self, window):
-        widget = QWidget()
-        vbox = QVBoxLayout(widget)
-
-        vbox.addWidget(QLabel(_("144 blocks passed and your Withdrawal was revealed! Here is you TxID! *****************************************")))
-
-        widget.setLayout(vbox)
-        return widget
-
-    def reveal_withdrawal(self):
-        # Handle reclaiming of deposit here
+        # Handle reclaiming of withdrawal here
         pass
 
     def create_summary_tab(self, window):
@@ -469,8 +409,8 @@ class SBTC_Tab(QWidget):
         vbox.addWidget(QLabel(_("Tx history Deposit")))
 
         self.tx_history_peg_in_table = QTableWidget()
-        self.tx_history_peg_in_table.setColumnCount(7)
-        self.tx_history_peg_in_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status"])
+        self.tx_history_peg_in_table.setColumnCount(8)
+        self.tx_history_peg_in_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status", "Action"])
         vbox.addWidget(self.tx_history_peg_in_table)
 
         add_address_button = QPushButton("Add Address")
@@ -514,6 +454,12 @@ class SBTC_Tab(QWidget):
         # Set the number of rows based on the number of transactions
         self.tx_history_peg_in_table.setRowCount(len(transactions))
 
+        filtered_transactions = [
+            transaction for transaction in transactions if transaction.get('status') == 3
+        ]  
+
+        self.filtered_transactions = filtered_transactions 
+
         # Populate the table with transaction data
         for row, transaction in enumerate(transactions):
             # Extracting the required fields: _id, originator, fromBtcAddress, amount, commitTxScript.address
@@ -546,12 +492,16 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(type_))
             self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_str))
 
+            if status_tx == 3:
+                reclaim_button = QPushButton("Reclaim")
+                reclaim_button.clicked.connect(lambda _, id=_id: self.reclaim_deposit(id))
+                self.tx_history_peg_in_table.setCellWidget(row, 7, reclaim_button)
+
         self.adjust_column_widths()
 
     def remove_address_tx_history_peg_in(self):
         self.tx_history_peg_in_table.clearContents()
         self.tx_history_peg_in_table.setRowCount(0)
-
 
     def refresh_tx_history_peg_in(self):
         # Assuming you have the addresses stored in the table
@@ -642,7 +592,7 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.setItem(row, 2, QTableWidgetItem(fromBtcAddress))
             self.tx_history_peg_out_table.setItem(row, 3, QTableWidgetItem(str(amount)))
             self.tx_history_peg_out_table.setItem(row, 4, QTableWidgetItem(commitTxScript_address))
-            self.tx_history_peg_out_table.setItem(row, 5, QTableWidgetItem(type_))
+            self.tx_history_peg_out_table.setItem(row, 5, QTableWidgetItem("witdraw"))
             self.tx_history_peg_out_table.setItem(row, 6, QTableWidgetItem(status_str))
 
             self.adjust_column_out_widths()
