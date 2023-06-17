@@ -374,6 +374,9 @@ class SBTC_Tab(QWidget):
         # Handle reclaiming of deposit here
         pass
 
+
+
+
     def create_summary_tab(self, window):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
@@ -392,6 +395,10 @@ class SBTC_Tab(QWidget):
         self.summary_table.setColumnCount(3)
         self.summary_table.setHorizontalHeaderLabels(["STX Address", "STX Balance", "sBTC Balance"])
         vbox.addWidget(self.summary_table)
+
+        refresh_button = QPushButton(_("Refresh"))
+        refresh_button.clicked.connect(self.refresh_addresses)
+        vbox.addWidget(refresh_button)
 
         remove_button = QPushButton(_("Remove Selected Address"))
         remove_button.clicked.connect(self.remove_address)
@@ -416,6 +423,8 @@ class SBTC_Tab(QWidget):
             self.summary_table.setItem(self.summary_table.rowCount() - 1, 1, QTableWidgetItem(str(stx_balance)))
             self.summary_table.setItem(self.summary_table.rowCount() - 1, 2, QTableWidgetItem(str(sbtc_balance)))
 
+        self.adjust_column_summary_widths()  # Adjust column widths after adding the address
+
     def update_balance(self, address, stx_balance, sbtc_balance):
         self.balance_btc[address] = (stx_balance, sbtc_balance)
 
@@ -428,12 +437,33 @@ class SBTC_Tab(QWidget):
                 self.summary_table.setItem(i, 2, sbtc_balance_item)
                 break
 
+        self.adjust_column_summary_widths()  # Adjust column widths after updating the balance
+
     def remove_address(self):
         current_row = self.summary_table.currentRow()
         self.summary_table.removeRow(current_row)
 
+    def refresh_addresses(self):
+        for row in range(self.summary_table.rowCount()):
+            address = self.summary_table.item(row, 0).text()
+            fetcher = BalanceFetcher(address)
+            fetcher.balancesFetched.connect(self.update_balance)
+            fetcher.finished.connect(lambda: self.cleanup(fetcher))
+            fetcher.start()
+            self.fetchers.append(fetcher)
+        
+        self.adjust_column_summary_widths()
+
+    def adjust_column_summary_widths(self):
+        self.summary_table.resizeColumnsToContents()
+
     def cleanup(self, fetcher):
         self.fetchers.remove(fetcher)
+
+
+
+
+
 
     def create_tx_history_peg_in_tab(self, window):
         widget = QWidget()
@@ -467,6 +497,8 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.insertRow(self.tx_history_peg_in_table.rowCount())
             self.tx_history_peg_in_table.setItem(self.tx_history_peg_in_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_in))
 
+            self.adjust_column_widths()
+
     def fetch_tx_history_peg_in(self, address_tx_history_peg_in):
         url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_in}"
         response_history = requests.get(url_history)
@@ -496,7 +528,6 @@ class SBTC_Tab(QWidget):
             commitTxScript_address = transaction.get('commitTxScript', {}).get('address', '')
             type_ = transaction.get('requestType')
             status_tx = transaction.get('status')
-            print(status_tx)
 
             # Mapping the type_ value to the corresponding string
             if status_tx == 1:
@@ -519,6 +550,8 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(type_))
             self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_str))
 
+            self.adjust_column_widths()
+
     def remove_address_tx_history_peg_in(self):
         current_row_tx_history_peg_in = self.tx_history_peg_in_table.currentRow()
         self.tx_history_peg_in_table.removeRow(current_row_tx_history_peg_in)
@@ -528,5 +561,8 @@ class SBTC_Tab(QWidget):
         for row in range(self.tx_history_peg_in_table.rowCount()):
             address = self.tx_history_peg_in_table.item(row, 0).text()
             self.fetch_tx_history_peg_in(address)
+    
+    def adjust_column_widths(self):
+        self.tx_history_peg_in_table.resizeColumnsToContents()
 
 
