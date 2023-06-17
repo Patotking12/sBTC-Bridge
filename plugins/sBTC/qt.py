@@ -24,7 +24,6 @@ class BalanceFetcher(QThread):
 
 
     def get_balance(self, address):
-        print(address)
         try:
             url = "https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/address/balances"
             payload = {
@@ -185,8 +184,6 @@ class SBTC_Tab(QWidget):
             data = response.json()
             reveal_pub_key = data['deposits']['revealPubKey']
             reclaim_pub_key = data['deposits']['reclaimPubKey']
-            print("reveal", reveal_pub_key)
-            print("reclaim", reclaim_pub_key)
 
             # Store the keys for later use (you can choose how to store them)
             self.reveal_pub_key = reveal_pub_key
@@ -229,8 +226,6 @@ class SBTC_Tab(QWidget):
                     max_balance = balance
                     address_with_max_balance = address
 
-            print("Address with the largest balance:", address_with_max_balance)
-            print("Largest balance:", max_balance)
             return address_with_max_balance
 
         except Exception as e:
@@ -444,10 +439,10 @@ class SBTC_Tab(QWidget):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
 
-        vbox.addWidget(QLabel(_("Tx history peg in")))
+        vbox.addWidget(QLabel(_("Tx history Deposit")))
 
         self.tx_history_peg_in_table = QTableWidget()
-        self.tx_history_peg_in_table.setColumnCount(8)
+        self.tx_history_peg_in_table.setColumnCount(7)
         self.tx_history_peg_in_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status"])
         vbox.addWidget(self.tx_history_peg_in_table)
 
@@ -473,17 +468,11 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.setItem(self.tx_history_peg_in_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_in))
 
     def fetch_tx_history_peg_in(self, address_tx_history_peg_in):
-        print("fetching Tx history peg in")
-        print(address_tx_history_peg_in)
         url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_in}"
-        print(url_history)
         response_history = requests.get(url_history)
-        print("response", response_history)
         data_history = response_history.json()
-        print("data", data_history)
 
 
-        print("fetching transactions")
         if isinstance(data_history, list):
             # Handle the case where data is a list
             transactions = data_history
@@ -493,7 +482,6 @@ class SBTC_Tab(QWidget):
         else:
             transactions = []
         
-        print(transactions)
 
         # Set the number of rows based on the number of transactions
         self.tx_history_peg_in_table.setRowCount(len(transactions))
@@ -502,9 +490,7 @@ class SBTC_Tab(QWidget):
         for row, transaction in enumerate(transactions):
             # Extracting the required fields: _id, originator, fromBtcAddress, amount, commitTxScript.address
             _id = transaction.get('_id', '')
-            print("id", _id)
             originator = transaction.get('originator', '')
-            print("originator", originator)
             fromBtcAddress = transaction.get('fromBtcAddress', '')
             amount = transaction.get('amount', '')
             commitTxScript_address = transaction.get('commitTxScript', {}).get('address', '')
@@ -512,15 +498,26 @@ class SBTC_Tab(QWidget):
             status_tx = transaction.get('status')
             print(status_tx)
 
+            # Mapping the type_ value to the corresponding string
+            if status_tx == 1:
+                status_str = "pending"
+            elif status_tx == 2:
+                status_str = "committed"
+            elif status_tx == 3:
+                status_str = "reclaimed"
+            elif status_tx == 4:
+                status_str = "revealed"
+            else:
+                status_str = "op_return"  # Handle any other values not covered
+
             # Inserting the extracted data into the table
             self.tx_history_peg_in_table.setItem(row, 0, QTableWidgetItem(_id))
             self.tx_history_peg_in_table.setItem(row, 1, QTableWidgetItem(originator))
             self.tx_history_peg_in_table.setItem(row, 2, QTableWidgetItem(fromBtcAddress))
             self.tx_history_peg_in_table.setItem(row, 3, QTableWidgetItem(str(amount)))
             self.tx_history_peg_in_table.setItem(row, 4, QTableWidgetItem(commitTxScript_address))
-            self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(str(type_)))
-            self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_tx))
-
+            self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(type_))
+            self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_str))
 
     def remove_address_tx_history_peg_in(self):
         current_row_tx_history_peg_in = self.tx_history_peg_in_table.currentRow()
