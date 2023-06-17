@@ -10,6 +10,15 @@ from electrum.wallet import InternalAddressCorruption
 from electrum.transaction import PartialTxOutput
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QWidget, QTabWidget, QInputDialog, QComboBox
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon
+from electrum.gui.qt.util import (read_QIcon, ColorScheme, text_dialog, icon_path, WaitingDialog,
+                   WindowModalDialog, ChoicesLayout, HelpLabel, Buttons,
+                   OkButton, InfoButton, WWLabel, TaskThread, CancelButton,
+                   CloseButton, HelpButton, MessageBoxMixin, EnterButton,
+                   import_meta_gui, export_meta_gui,
+                   filename_field, address_field, char_width_in_lineedit, webopen,
+                   TRANSACTION_FILE_EXTENSION_FILTER_ANY, MONOSPACE_FONT,
+                   getOpenFileName, getSaveFileName, BlockingWaitingDialog, font_height)
 
 class BalanceFetcher(QThread):
     balancesFetched = pyqtSignal(str, float, float)
@@ -21,7 +30,6 @@ class BalanceFetcher(QThread):
     def run(self):
         balance_stx, balance_sBTC = self.get_balance(self.address)
         self.balancesFetched.emit(self.address, balance_stx, balance_sBTC)
-
 
     def get_balance(self, address):
         try:
@@ -41,7 +49,6 @@ class BalanceFetcher(QThread):
             print(f"Failed to fetch balance for address {address}: {e}")
             return 0, 0
 
-
 class Plugin(BasePlugin):
     def __init__(self, parent, config, name):
         super().__init__(parent, config, name)
@@ -49,7 +56,10 @@ class Plugin(BasePlugin):
     @hook
     def load_wallet(self, wallet, window):
         sbtc_tab = SBTC_Tab(window)
-        window.tabs.addTab(sbtc_tab, "sBTC")
+        icon_path = './sBTC Logo.png'
+        sbtc_icon = read_QIcon("sBTC_Logo.png")
+        tab_index = window.tabs.addTab(sbtc_tab, sbtc_icon, "sBTC")
+        window.tabs.setTabToolTip(tab_index, "sBTC")
 
 class SBTC_Tab(QWidget):
     def __init__(self, window):
@@ -60,26 +70,56 @@ class SBTC_Tab(QWidget):
         layout = QVBoxLayout(self)
         tab_widget = QTabWidget()
 
-        deposit_tab = self.create_deposit_tab(window)
-        reclaim_deposit_tab = self.create_reclaim_deposit_tab(window)
-        reveal_deposit_tab = self.create_reveal_deposit_tab(window)  
-        withdraw_tab = self.create_withdraw_tab(window)
-        reclaim_withdrawal_tab = self.create_reclaim_withdrawal_tab(window) 
-        reveal_withdrawal_tab = self.create_reveal_withdrawal_tab(window) 
+        deposit_all_tab = self.create_deposit_all_tab(window)
+        withdraw_all_tab = self.create_withdraw_all_tab(window)
         summary_tab = self.create_summary_tab(window)
-        tx_history_peg_in_tab = self.create_tx_history_peg_in_tab(window)
 
-        tab_widget.addTab(deposit_tab, "Deposit")
-        tab_widget.addTab(reclaim_deposit_tab, "Reclaim Deposit")  
-        tab_widget.addTab(reveal_deposit_tab, "Reveal Deposit")  
-        tab_widget.addTab(withdraw_tab, "Withdraw")
-        tab_widget.addTab(reclaim_withdrawal_tab, "Reclaim Withdrawal")
-        tab_widget.addTab(reveal_withdrawal_tab, "Reveal Withdrawal")
+        tab_widget.addTab(deposit_all_tab, "Deposit")
+        tab_widget.addTab(withdraw_all_tab, "Withdraw")
         tab_widget.addTab(summary_tab, "Summary")
-        tab_widget.addTab(tx_history_peg_in_tab, "Tx history peg in")
 
         layout.addWidget(tab_widget)
         self.setLayout(layout)
+
+    def create_deposit_all_tab(self, window):
+        deposit_all_tab = QWidget()
+        vbox = QVBoxLayout(deposit_all_tab)
+        tab_widget = QTabWidget()
+
+        deposit_tab = self.create_deposit_tab(window)
+        reclaim_deposit_tab = self.create_reclaim_deposit_tab(window)
+        reveal_deposit_tab = self.create_reveal_deposit_tab(window)
+        tx_history_peg_in_tab = self.create_tx_history_peg_in_tab(window)
+
+        tab_widget.addTab(deposit_tab, "Deposit BTC")
+        tab_widget.addTab(reclaim_deposit_tab, "Reclaim Deposit")
+        tab_widget.addTab(reveal_deposit_tab, "Reveal Deposit")
+        tab_widget.addTab(tx_history_peg_in_tab, "Tx history peg in")
+
+        vbox.addWidget(tab_widget)
+        deposit_all_tab.setLayout(vbox)
+
+        return deposit_all_tab
+    
+    def create_withdraw_all_tab(self, window):
+        withdraw_all_tab = QWidget()
+        vbox = QVBoxLayout(withdraw_all_tab)
+        tab_widget = QTabWidget()
+
+        withdraw_tab = self.create_withdraw_tab(window)
+        reclaim_withdraw_tab = self.create_reclaim_withdrawal_tab(window)
+        reveal_withdraw_tab = self.create_reveal_withdrawal_tab(window)
+        tx_history_peg_out_tab = self.create_tx_history_peg_out_tab(window)
+
+        tab_widget.addTab(withdraw_tab, "Withdraw BTC")
+        tab_widget.addTab(reclaim_withdraw_tab, "Reclaim Withdraw")
+        tab_widget.addTab(reveal_withdraw_tab, "Reveal Withdraw")
+        tab_widget.addTab(tx_history_peg_out_tab, "Tx history peg out")
+
+        vbox.addWidget(tab_widget)
+        withdraw_all_tab.setLayout(vbox)
+
+        return withdraw_all_tab
 
     def create_deposit_tab(self, window):
         # This function creates the interface for the new "Send BTC" tab.
@@ -142,40 +182,6 @@ class SBTC_Tab(QWidget):
 
         widget.setLayout(vbox)
         return widget
-
-    # def create_script(self):
-    #     data = self.buildData(self.pegInData.stacksAddress, True)
-    #     stacks_address = self.stx_address_input.text()
-    #     reveal_pub_key = bitcoinlib.hex.decode(self.reveal_pub_key)
-    #     reclaim_pub_key = bitcoinlib.hex.decode(self.reclaim_pub_key)
-
-    #     # Build the script for the first case
-    #     script1 = [
-    #         data,
-    #         'DROP',
-    #         bitcoinlib.hex.decode(reveal_pub_key),
-    #         'CHECKSIG'
-    #     ]
-    #     script1_encoded = bitcoinlib.Script.encode(script1)
-    #     print(script1_encoded)
-
-    #     # Build the script for the second case
-    #     script2 = [
-    #         bitcoinlib.hex.decode(reclaim_pub_key),
-    #         'CHECKSIG'
-    #     ]
-    #     script2_encoded = bitcoinlib.Script.encode(script2)
-    #     print(script2_encoded)
-
-    #     # Build the final scripts array
-    #     scripts = [
-    #         {"script": script1_encoded},
-    #         {"script": script2_encoded}
-    #     ]
-
-    #     # Build the final script
-    #     script = bitcoinlib.p2tr(bitcoinlib.TAPROOT_UNSPENDABLE_KEY, scripts, bitcoinlib.Network.TESTNET, True)
-    #     print(script)
 
     def fetch_and_store_keys(self):
         try:
@@ -291,7 +297,6 @@ class SBTC_Tab(QWidget):
             # If there was an error, display a message box with the error
             QMessageBox.critical(None, _('Transaction Error'), _('Error sending BTC: {}').format(e))
 
-
     def create_reclaim_deposit_tab(self, window):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
@@ -374,9 +379,6 @@ class SBTC_Tab(QWidget):
         # Handle reclaiming of deposit here
         pass
 
-
-
-
     def create_summary_tab(self, window):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
@@ -396,9 +398,9 @@ class SBTC_Tab(QWidget):
         self.summary_table.setHorizontalHeaderLabels(["STX Address", "STX Balance", "sBTC Balance"])
         vbox.addWidget(self.summary_table)
 
-        refresh_button = QPushButton(_("Refresh"))
-        refresh_button.clicked.connect(self.refresh_addresses)
-        vbox.addWidget(refresh_button)
+        refresh_summary_button = QPushButton(_("Refresh"))
+        refresh_summary_button.clicked.connect(self.refresh_addresses)
+        vbox.addWidget(refresh_summary_button)
 
         remove_button = QPushButton(_("Remove Selected Address"))
         remove_button.clicked.connect(self.remove_address)
@@ -460,11 +462,6 @@ class SBTC_Tab(QWidget):
     def cleanup(self, fetcher):
         self.fetchers.remove(fetcher)
 
-
-
-
-
-
     def create_tx_history_peg_in_tab(self, window):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
@@ -513,7 +510,6 @@ class SBTC_Tab(QWidget):
             transactions = data_history.get('transactions', [])
         else:
             transactions = []
-        
 
         # Set the number of rows based on the number of transactions
         self.tx_history_peg_in_table.setRowCount(len(transactions))
@@ -565,4 +561,102 @@ class SBTC_Tab(QWidget):
     def adjust_column_widths(self):
         self.tx_history_peg_in_table.resizeColumnsToContents()
 
+    def create_tx_history_peg_out_tab(self, window):
+        widget = QWidget()
+        vbox = QVBoxLayout(widget)
+
+        vbox.addWidget(QLabel(_("Tx history Deposit")))
+
+        self.tx_history_peg_out_table = QTableWidget()
+        self.tx_history_peg_out_table.setColumnCount(7)
+        self.tx_history_peg_out_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status"])
+        vbox.addWidget(self.tx_history_peg_out_table)
+
+        add_address_out_button = QPushButton("Add Address")
+        add_address_out_button.clicked.connect(self.add_address_tx_history_peg_out)
+        vbox.addWidget(add_address_out_button)
+
+        remove_address_out_button = QPushButton("Remove Address")
+        remove_address_out_button.clicked.connect(self.remove_address_tx_history_peg_out)
+        vbox.addWidget(remove_address_out_button)
+
+        refresh_out_button = QPushButton("Refresh")
+        refresh_out_button.clicked.connect(self.refresh_tx_history_peg_out)
+        vbox.addWidget(refresh_out_button)
+
+        widget.setLayout(vbox)
+        return widget
+
+    def add_address_tx_history_peg_out(self):
+        address_tx_history_peg_out, ok = QInputDialog.getText(self, "Add Address", "Enter an address:")
+        if ok:
+            self.tx_history_peg_out_table.insertRow(self.tx_history_peg_out_table.rowCount())
+            self.tx_history_peg_out_table.setItem(self.tx_history_peg_out_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_out))
+
+            self.adjust_column_widths()
+
+    def fetch_tx_history_peg_out(self, address_tx_history_peg_out):
+        url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_out}"
+        response_history = requests.get(url_history)
+        data_history = response_history.json()
+
+
+        if isinstance(data_history, list):
+            # Handle the case where data is a list
+            transactions = data_history
+        elif isinstance(data_history, dict):
+            # Handle the case where data is a dictionary
+            transactions = data_history.get('transactions', [])
+        else:
+            transactions = [] 
+
+        # Set the number of rows based on the number of transactions
+        self.tx_history_peg_out_table.setRowCount(len(transactions))
+
+        # Populate the table with transaction data
+        for row, transaction in enumerate(transactions):
+            # Extracting the required fields: _id, originator, fromBtcAddress, amount, commitTxScript.address
+            _id = transaction.get('_id', '')
+            originator = transaction.get('originator', '')
+            fromBtcAddress = transaction.get('fromBtcAddress', '')
+            amount = transaction.get('amount', '')
+            commitTxScript_address = transaction.get('commitTxScript', {}).get('address', '')
+            type_ = transaction.get('requestType')
+            status_tx = transaction.get('status')
+
+            # Mapping the type_ value to the corresponding string
+            if status_tx == 1:
+                status_str = "pending"
+            elif status_tx == 2:
+                status_str = "committed"
+            elif status_tx == 3:
+                status_str = "reclaimed"
+            elif status_tx == 4:
+                status_str = "revealed"
+            else:
+                status_str = "op_return"  # Handle any other values not covered
+
+            # Inserting the extracted data into the table
+            self.tx_history_peg_out_table.setItem(row, 0, QTableWidgetItem(_id))
+            self.tx_history_peg_out_table.setItem(row, 1, QTableWidgetItem(originator))
+            self.tx_history_peg_out_table.setItem(row, 2, QTableWidgetItem(fromBtcAddress))
+            self.tx_history_peg_out_table.setItem(row, 3, QTableWidgetItem(str(amount)))
+            self.tx_history_peg_out_table.setItem(row, 4, QTableWidgetItem(commitTxScript_address))
+            self.tx_history_peg_out_table.setItem(row, 5, QTableWidgetItem(type_))
+            self.tx_history_peg_out_table.setItem(row, 6, QTableWidgetItem(status_str))
+
+            self.adjust_column_widths()
+
+    def remove_address_tx_history_peg_out(self):
+        current_row_tx_history_peg_out = self.tx_history_peg_out_table.currentRow()
+        self.tx_history_peg_out_table.removeRow(current_row_tx_history_peg_out)
+
+    def refresh_tx_history_peg_out(self):
+        # Assuming you have the addresses stored in the table
+        for row in range(self.tx_history_peg_out_table.rowCount()):
+            address = self.tx_history_peg_out_table.item(row, 0).text()
+            self.fetch_tx_history_peg_out(address)
+    
+    def adjust_column_widths(self):
+        self.tx_history_peg_out_table.resizeColumnsToContents()
 

@@ -97,6 +97,11 @@ Item {
         }
         MenuItem {
             icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
+            icon.source: '../../icons/sBtc_Logo.png'
+            }
+        }
+        MenuItem {
+            icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
             icon.source: '../../icons/lightning.png'
             action: Action {
                 text: qsTr('Channels');
