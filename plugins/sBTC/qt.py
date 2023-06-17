@@ -597,9 +597,9 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.setItem(row, 6, QTableWidgetItem(status_str))
 
             if status_tx == 3:
-                reclaim_button = QPushButton("Reclaim")
-                reclaim_button.clicked.connect(lambda _, id=_id: self.reclaim_deposit(id))
-                self.tx_history_peg_in_table.setCellWidget(row, 7, reclaim_button)
+                reclaim_withdraw_button = QPushButton("Reclaim")
+                reclaim_withdraw_button.clicked.connect(lambda _, id=_id: self.reclaim_withdraw(id))
+                self.tx_history_peg_out_table.setCellWidget(row, 7, reclaim_withdraw_button)
 
             self.adjust_column_out_widths()
 
