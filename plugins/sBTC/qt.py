@@ -495,12 +495,12 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.setItem(self.tx_history_peg_in_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_in))
 
             self.adjust_column_widths()
+            self.fetch_tx_history_peg_in(address_tx_history_peg_in)
 
-    def fetch_tx_history_peg_in(self, address_tx_history_peg_in):
-        url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_in}"
+    def fetch_tx_history_peg_in(self, address):
+        url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address}"
         response_history = requests.get(url_history)
         data_history = response_history.json()
-
 
         if isinstance(data_history, list):
             # Handle the case where data is a list
@@ -546,11 +546,12 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_in_table.setItem(row, 5, QTableWidgetItem(type_))
             self.tx_history_peg_in_table.setItem(row, 6, QTableWidgetItem(status_str))
 
-            self.adjust_column_widths()
+        self.adjust_column_widths()
 
     def remove_address_tx_history_peg_in(self):
-        current_row_tx_history_peg_in = self.tx_history_peg_in_table.currentRow()
-        self.tx_history_peg_in_table.removeRow(current_row_tx_history_peg_in)
+        self.tx_history_peg_in_table.clearContents()
+        self.tx_history_peg_in_table.setRowCount(0)
+
 
     def refresh_tx_history_peg_in(self):
         # Assuming you have the addresses stored in the table
@@ -593,13 +594,12 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.insertRow(self.tx_history_peg_out_table.rowCount())
             self.tx_history_peg_out_table.setItem(self.tx_history_peg_out_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_out))
 
-            self.adjust_column_widths()
+            self.adjust_column_out_widths()
 
     def fetch_tx_history_peg_out(self, address_tx_history_peg_out):
         url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_out}"
         response_history = requests.get(url_history)
         data_history = response_history.json()
-
 
         if isinstance(data_history, list):
             # Handle the case where data is a list
@@ -645,11 +645,11 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.setItem(row, 5, QTableWidgetItem(type_))
             self.tx_history_peg_out_table.setItem(row, 6, QTableWidgetItem(status_str))
 
-            self.adjust_column_widths()
+            self.adjust_column_out_widths()
 
     def remove_address_tx_history_peg_out(self):
-        current_row_tx_history_peg_out = self.tx_history_peg_out_table.currentRow()
-        self.tx_history_peg_out_table.removeRow(current_row_tx_history_peg_out)
+        self.tx_history_peg_out_table.clearContents()
+        self.tx_history_peg_out_table.setRowCount(0)
 
     def refresh_tx_history_peg_out(self):
         # Assuming you have the addresses stored in the table
@@ -657,6 +657,6 @@ class SBTC_Tab(QWidget):
             address = self.tx_history_peg_out_table.item(row, 0).text()
             self.fetch_tx_history_peg_out(address)
     
-    def adjust_column_widths(self):
+    def adjust_column_out_widths(self):
         self.tx_history_peg_out_table.resizeColumnsToContents()
 
