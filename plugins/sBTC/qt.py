@@ -519,8 +519,8 @@ class SBTC_Tab(QWidget):
         vbox.addWidget(QLabel(_("Tx history Deposit")))
 
         self.tx_history_peg_out_table = QTableWidget()
-        self.tx_history_peg_out_table.setColumnCount(7)
-        self.tx_history_peg_out_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status"])
+        self.tx_history_peg_out_table.setColumnCount(8)
+        self.tx_history_peg_out_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status", "Action"])
         vbox.addWidget(self.tx_history_peg_out_table)
 
         add_address_out_button = QPushButton("Add Address")
@@ -595,6 +595,11 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.setItem(row, 4, QTableWidgetItem(commitTxScript_address))
             self.tx_history_peg_out_table.setItem(row, 5, QTableWidgetItem("witdraw"))
             self.tx_history_peg_out_table.setItem(row, 6, QTableWidgetItem(status_str))
+
+            if status_tx == 3:
+                reclaim_button = QPushButton("Reclaim")
+                reclaim_button.clicked.connect(lambda _, id=_id: self.reclaim_deposit(id))
+                self.tx_history_peg_in_table.setCellWidget(row, 7, reclaim_button)
 
             self.adjust_column_out_widths()
 
