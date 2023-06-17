@@ -545,6 +545,7 @@ class SBTC_Tab(QWidget):
             self.tx_history_peg_out_table.setItem(self.tx_history_peg_out_table.rowCount() - 1, 0, QTableWidgetItem(address_tx_history_peg_out))
 
             self.adjust_column_out_widths()
+            self.fetch_tx_history_peg_out(address_tx_history_peg_out)
 
     def fetch_tx_history_peg_out(self, address_tx_history_peg_out):
         url_history = f"https://testnet.stx.eco/bridge-api/testnet/v1/sbtc/pegins/search/{address_tx_history_peg_out}"
