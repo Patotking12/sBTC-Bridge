@@ -93,8 +93,11 @@ class SBTC_Tab(QWidget):
         deposit_tab = self.create_deposit_tab(window)
         tx_history_peg_in_tab = self.create_tx_history_peg_in_tab(window)
 
-        tab_widget.addTab(deposit_tab, "Deposit BTC")
-        tab_widget.addTab(tx_history_peg_in_tab, "Tx history peg in")
+        deposit_icon = read_QIcon("deposit.png")
+        pegin_icon = read_QIcon("tab_addresses.png")
+
+        tab_widget.addTab(deposit_tab,deposit_icon, "Deposit BTC")
+        tab_widget.addTab(tx_history_peg_in_tab, pegin_icon, "Tx history peg in")
 
         vbox.addWidget(tab_widget)
         deposit_all_tab.setLayout(vbox)
@@ -106,11 +109,14 @@ class SBTC_Tab(QWidget):
         vbox = QVBoxLayout(withdraw_all_tab)
         tab_widget = QTabWidget()
 
+        withdraw_icon = read_QIcon("withdraw.png")
+        pegout_icon = read_QIcon("tab_addresses.png")
+
         withdraw_tab = self.create_withdraw_tab(window)
         tx_history_peg_out_tab = self.create_tx_history_peg_out_tab(window)
 
-        tab_widget.addTab(withdraw_tab, "Withdraw BTC")
-        tab_widget.addTab(tx_history_peg_out_tab, "Tx history peg out")
+        tab_widget.addTab(withdraw_tab, withdraw_icon, "Withdraw BTC")
+        tab_widget.addTab(tx_history_peg_out_tab, pegout_icon, "Tx history peg out")
 
         vbox.addWidget(tab_widget)
         withdraw_all_tab.setLayout(vbox)
@@ -129,7 +135,8 @@ class SBTC_Tab(QWidget):
         amount_label = QLabel(_("BTC to Deposit:"))
         self.amount_input = QLineEdit()
         self.amount_input.setMaximumWidth(100)
-        amount_layout.addWidget(amount_label)  
+        amount_layout.addWidget(amount_label) 
+        amount_layout.addSpacing(19) 
         amount_layout.addWidget(self.amount_input)
         amount_layout.addStretch()  # Add a stretch to push the input field to the right
         vbox.addLayout(amount_layout)
@@ -140,6 +147,7 @@ class SBTC_Tab(QWidget):
         self.stx_address_input = QLineEdit()
         self.stx_address_input.setMaximumWidth(500)  # Set the maximum width for the input field
         stx_address_layout.addWidget(stx_address_label)
+        stx_address_layout.addSpacing(32)
         stx_address_layout.addWidget(self.stx_address_input)
         stx_address_layout.addStretch()  # Add a stretch to push the input field to the right
         vbox.addLayout(stx_address_layout)
@@ -150,6 +158,7 @@ class SBTC_Tab(QWidget):
         self.btc_wallet_address_label = QLabel()
         self.btc_wallet_address_label.setMaximumWidth(500)  # Set the maximum width for the label
         btc_wallet_address_layout.addWidget(btc_wallet_address_label)
+        btc_wallet_address_layout.addSpacing(30)
         btc_wallet_address_layout.addWidget(self.btc_wallet_address_label)
         btc_wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
         vbox.addLayout(btc_wallet_address_layout)
@@ -160,6 +169,7 @@ class SBTC_Tab(QWidget):
         self.wallet_address_label = QLabel()
         self.wallet_address_label.setMaximumWidth(500)  # Set the maximum width for the label
         wallet_address_layout.addWidget(wallet_address_label)
+        wallet_address_layout.addSpacing(35)
         wallet_address_layout.addWidget(self.wallet_address_label)
         wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
         vbox.addLayout(wallet_address_layout)
@@ -170,6 +180,7 @@ class SBTC_Tab(QWidget):
         self.address_input = QLineEdit()
         self.address_input.setMaximumWidth(500)  # Set the maximum width for the input field
         address_layout.addWidget(address_label)
+        address_layout.addSpacing(5)
         address_layout.addWidget(self.address_input)
         address_layout.addStretch()  # Add a stretch to push the input field to the right
         vbox.addLayout(address_layout)
