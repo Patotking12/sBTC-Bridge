@@ -8,7 +8,7 @@ from electrum.gui.qt.util import WindowModalDialog, EnterButton
 from electrum.gui.qt.main_window import ElectrumWindow
 from electrum.wallet import InternalAddressCorruption
 from electrum.transaction import PartialTxOutput
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QWidget, QTabWidget, QInputDialog, QComboBox
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QMessageBox, QWidget, QTabWidget, QInputDialog, QComboBox, QHBoxLayout
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon
 from electrum.gui.qt.util import (read_QIcon, ColorScheme, text_dialog, icon_path, WaitingDialog,
@@ -74,9 +74,13 @@ class SBTC_Tab(QWidget):
         withdraw_all_tab = self.create_withdraw_all_tab(window)
         summary_tab = self.create_summary_tab(window)
 
-        tab_widget.addTab(deposit_all_tab, "Deposit")
-        tab_widget.addTab(withdraw_all_tab, "Withdraw")
-        tab_widget.addTab(summary_tab, "Summary")
+        deposit_icon = read_QIcon("deposit.png")
+        withdraw_icon = read_QIcon("withdraw.png")
+        summary_icon = read_QIcon("tab_addresses.png")
+
+        tab_widget.addTab(deposit_all_tab, deposit_icon, "Deposit")  # Add icon to deposit_all_tab
+        tab_widget.addTab(withdraw_all_tab, withdraw_icon, "Withdraw")  # Add icon to withdraw_all_tab
+        tab_widget.addTab(summary_tab, summary_icon, "Summary")  # Add icon to summary_tab
 
         layout.addWidget(tab_widget)
         self.setLayout(layout)
@@ -118,39 +122,91 @@ class SBTC_Tab(QWidget):
         widget = WindowModalDialog(window, _('Send BTC'))  # Create a new dialog window
         widget.setWindowFlags(widget.windowFlags() & ~Qt.Dialog)  # Set the window flags
         vbox = QVBoxLayout(widget)  # Create a new vertical box layout
+        vbox.setContentsMargins(50, 20, 0, 0)
 
         # Create the interface elements for the send tab
-        vbox.addWidget(QLabel(_("Amount (BTC):")))  
-        self.amount_input = QLineEdit() 
-        vbox.addWidget(self.amount_input)
+        amount_layout = QHBoxLayout()  # Create a horizontal layout for amount input
+        amount_label = QLabel(_("BTC to Deposit:"))
+        self.amount_input = QLineEdit()
+        self.amount_input.setMaximumWidth(100)
+        amount_layout.addWidget(amount_label)  
+        amount_layout.addWidget(self.amount_input)
+        amount_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(amount_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("Associated STX Address:")))
+        stx_address_layout = QHBoxLayout()
+        stx_address_label = QLabel(_("STX Address:"))
         self.stx_address_input = QLineEdit()
-        vbox.addWidget(self.stx_address_input)
+        self.stx_address_input.setMaximumWidth(500)  # Set the maximum width for the input field
+        stx_address_layout.addWidget(stx_address_label)
+        stx_address_layout.addWidget(self.stx_address_input)
+        stx_address_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(stx_address_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("My BTC wallet:")))
+        btc_wallet_address_layout = QHBoxLayout()
+        btc_wallet_address_label = QLabel(_("My BTC wallet:"))
         self.btc_wallet_address_label = QLabel()
-        vbox.addWidget(self.btc_wallet_address_label)
+        self.btc_wallet_address_label.setMaximumWidth(500)  # Set the maximum width for the label
+        btc_wallet_address_layout.addWidget(btc_wallet_address_label)
+        btc_wallet_address_layout.addWidget(self.btc_wallet_address_label)
+        btc_wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
+        vbox.addLayout(btc_wallet_address_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("sBTC wallet:")))
+        wallet_address_layout = QHBoxLayout()
+        wallet_address_label = QLabel(_("sBTC wallet:"))
         self.wallet_address_label = QLabel()
-        vbox.addWidget(self.wallet_address_label)
+        self.wallet_address_label.setMaximumWidth(500)  # Set the maximum width for the label
+        wallet_address_layout.addWidget(wallet_address_label)
+        wallet_address_layout.addWidget(self.wallet_address_label)
+        wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
+        vbox.addLayout(wallet_address_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("Recipient Address:")))
+        address_layout = QHBoxLayout()
+        address_label = QLabel(_("Recipient Address:"))
         self.address_input = QLineEdit()
-        vbox.addWidget(self.address_input)
+        self.address_input.setMaximumWidth(500)  # Set the maximum width for the input field
+        address_layout.addWidget(address_label)
+        address_layout.addWidget(self.address_input)
+        address_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(address_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("Transaction Fee (BTC):")))
-        self.fee_label = QLabel()  # Create the fee label
-        vbox.addWidget(self.fee_label)  # Add the fee label to the layout
-
-        # Create a combo box for fee selection
+        
+        fee_layout = QHBoxLayout()
+        fee_label = QLabel(_("Transaction Fee:"))
+        self.fee_label = QLabel()
         self.fee_combo = QComboBox()
-        vbox.addWidget(self.fee_combo)
+        self.fee_combo.setMaximumWidth(300)  # Set the maximum width for the combo box
+        fee_layout.addWidget(fee_label)
+        fee_layout.addWidget(self.fee_label)
+        fee_layout.addWidget(self.fee_combo)
+        fee_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(fee_layout)
+        vbox.addSpacing(10)
+
+
+        generate_script_button = QPushButton("Generate Script")  # Create the "Generate Script" button
+        generate_script_button.clicked.connect(self.generate_script)  # Connect the button click signal to the generate_script method
+        generate_script_button.setMaximumWidth(150)  # Set the maximum width for the button
+        vbox.addWidget(generate_script_button)
+        vbox.addSpacing(10)
 
         send_button = EnterButton(_('Deposit BTC'), lambda: self.prompt_password(window))  # Create the send button
+        send_button.setMaximumWidth(150)  # Set the maximum width for the button
         vbox.addWidget(send_button)
 
+
+        btc_wallet_address = self.fetch_btc_wallet_address(window)
+        self.btc_wallet_address_label.setText(btc_wallet_address)
+
+        widget.setLayout(vbox)
+        return widget
+
+    def generate_script(self):
         # Fetch fee estimates and populate the combo box
         fee_estimates = self.fetch_fee_estimates()
         if fee_estimates:
@@ -161,19 +217,11 @@ class SBTC_Tab(QWidget):
             ]
             self.fee_combo.addItems(fee_options)
 
-        # Fetch and display the sBTC wallet address
+       # Fetch and display the sBTC wallet address
         wallet_address = self.fetch_sbtc_wallet_address()
         self.wallet_address_label.setText(wallet_address)
 
-        btc_wallet_address = self.fetch_btc_wallet_address(window)
-        self.btc_wallet_address_label.setText(btc_wallet_address)
-
         self.fetch_and_store_keys()
-
-        # self.create_script()
-
-        widget.setLayout(vbox)
-        return widget
 
     def fetch_and_store_keys(self):
         try:

@@ -102,6 +102,16 @@ Item {
         }
         MenuItem {
             icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
+            icon.source: '../../icons/withdraw.png'
+            }
+        }
+        MenuItem {
+            icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
+            icon.source: '../../icons/deposit.png'
+            }
+        }
+        MenuItem {
+            icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
             icon.source: '../../icons/lightning.png'
             action: Action {
                 text: qsTr('Channels');
