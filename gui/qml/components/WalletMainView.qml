@@ -112,6 +112,11 @@ Item {
         }
         MenuItem {
             icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
+            icon.source: '../../icons/BTC.png'
+            }
+        }
+        MenuItem {
+            icon.color: action.enabled ? 'transparent' : Material.iconDisabledColor
             icon.source: '../../icons/lightning.png'
             action: Action {
                 text: qsTr('Channels');

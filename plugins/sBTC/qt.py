@@ -188,7 +188,6 @@ class SBTC_Tab(QWidget):
         address_layout.addStretch()  # Add a stretch to push the input field to the right
         vbox.addLayout(address_layout)
         vbox.addSpacing(10)
-
         
         fee_layout = QHBoxLayout()
         fee_label = QLabel(_("Transaction Fee:"))
@@ -200,7 +199,6 @@ class SBTC_Tab(QWidget):
         fee_layout.addStretch()  
         vbox.addLayout(fee_layout)
         vbox.addSpacing(10)
-
 
         generate_script_button = QPushButton("Generate Script")  
         generate_script_button.clicked.connect(self.generate_script)  # Connect the button click signal to the generate_script method
@@ -359,20 +357,55 @@ class SBTC_Tab(QWidget):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
 
-        vbox.addWidget(QLabel(_("BTC Amount to Withdraw:")))
+        amount_withdraw_layout = QHBoxLayout()  # Create a horizontal layout for amount input
+        amount_withdraw_label = QLabel(_("BTC to Withdraw:"))
         self.amount_withdraw_input = QLineEdit()
-        vbox.addWidget(self.amount_withdraw_input)
+        self.amount_withdraw_input.setMaximumWidth(100)
+        self.amount_withdraw_input.setPlaceholderText("BTC")
+        amount_withdraw_layout.addWidget(amount_withdraw_label) 
+        amount_withdraw_layout.addSpacing(23) 
+        amount_withdraw_layout.addWidget(self.amount_withdraw_input)
+        amount_withdraw_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(amount_withdraw_layout)
+        vbox.addSpacing(10)
 
-        vbox.addWidget(QLabel(_("STX Address:")))
+        stx_address_layout = QHBoxLayout()  # Create a horizontal layout for amount input
+        stx_address_label = QLabel(_("STX Address"))
         self.stx_address_input = QLineEdit()
-        vbox.addWidget(self.stx_address_input)
+        self.stx_address_input.setMaximumWidth(500)
+        self.stx_address_input.setPlaceholderText("STX Address")
+        stx_address_layout.addWidget(stx_address_label) 
+        stx_address_layout.addSpacing(50) 
+        stx_address_layout.addWidget(self.stx_address_input)
+        stx_address_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(stx_address_layout)
+        vbox.addSpacing(10)
 
-        send_button = QPushButton(_("Withdraw sBTC for BTC"))
-        send_button.clicked.connect(self.withdraw_sbtc)
-        vbox.addWidget(send_button)
+        btc_withdraw_wallet_address_layout = QHBoxLayout()
+        btc_withdraw_wallet_address_label = QLabel(_("My BTC wallet:"))
+        self.btc_withdraw_wallet_address_label = QLabel()
+        self.btc_withdraw_wallet_address_label.setMaximumWidth(500)  # Set the maximum width for the label
+        btc_withdraw_wallet_address_layout.addWidget(btc_withdraw_wallet_address_label)
+        btc_withdraw_wallet_address_layout.addSpacing(30)
+        btc_withdraw_wallet_address_layout.addWidget(self.btc_withdraw_wallet_address_label)
+        btc_withdraw_wallet_address_layout.addStretch()  
+        vbox.addLayout(btc_withdraw_wallet_address_layout)
+        vbox.addSpacing(10)
+
+        btc_withdraw_wallet_address = self.fetch_btc_wallet_address(window)
+        self.btc_withdraw_wallet_address_label.setText(btc_withdraw_wallet_address)
+
+        withdraw_button = EnterButton(_('Withdraw BTC'), lambda: self.prompt_password_withdraw(window))  # Create the withdraw button
+        withdraw_button.setMaximumWidth(150)  # Set the maximum width for the button
+        vbox.addWidget(withdraw_button)
+
+        vbox.addStretch()
 
         widget.setLayout(vbox)
         return widget
+
+    def prompt_password_withdraw(self, window):
+        pass
 
     def withdraw_sbtc(self):
         pass
@@ -385,14 +418,24 @@ class SBTC_Tab(QWidget):
         widget = QWidget()
         vbox = QVBoxLayout(widget)
 
-        vbox.addWidget(QLabel(_("Summary of Transactions")))
+        vbox.addWidget(QLabel(_("Balances")))
+        vbox.addSpacing(20)
 
-        vbox.addWidget(QLabel(_("Add STX Address:")))
+        add_address_layout = QHBoxLayout()  # Create a horizontal layout for amount input
+        add_address_label = QLabel(_("Add STX Address:"))
         self.add_address_input = QLineEdit()
-        vbox.addWidget(self.add_address_input)
+        self.add_address_input.setMaximumWidth(500)
+        self.add_address_input.setPlaceholderText("STX Address")
+        add_address_layout.addWidget(add_address_label) 
+        add_address_layout.addSpacing(10) 
+        add_address_layout.addWidget(self.add_address_input)
+        add_address_layout.addStretch()  # Add a stretch to push the input field to the right
+        vbox.addLayout(add_address_layout)
+        vbox.addSpacing(10)
 
         add_button = QPushButton(_("Add Address"))
         add_button.clicked.connect(self.add_address)
+        add_button.setMaximumWidth(100)  # Set maximum width for the button
         vbox.addWidget(add_button)
 
         self.summary_table = QTableWidget()
@@ -402,11 +445,15 @@ class SBTC_Tab(QWidget):
 
         refresh_summary_button = QPushButton(_("Refresh"))
         refresh_summary_button.clicked.connect(self.refresh_addresses)
+        refresh_summary_button.setMaximumWidth(100)
         vbox.addWidget(refresh_summary_button)
 
-        remove_button = QPushButton(_("Remove Selected Address"))
+        remove_button = QPushButton(_("Remove"))
         remove_button.clicked.connect(self.remove_address)
+        remove_button.setMaximumWidth(100)
         vbox.addWidget(remove_button)
+
+        vbox.addStretch()
 
         widget.setLayout(vbox)
         return widget
@@ -475,17 +522,22 @@ class SBTC_Tab(QWidget):
         self.tx_history_peg_in_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status", "Action"])
         vbox.addWidget(self.tx_history_peg_in_table)
 
-        add_address_button = QPushButton("Add Address")
+        add_address_button = QPushButton("Add")
         add_address_button.clicked.connect(self.add_address_tx_history_peg_in)
+        add_address_button.setMaximumWidth(100)
         vbox.addWidget(add_address_button)
 
-        remove_address_button = QPushButton("Remove Address")
+        remove_address_button = QPushButton("Remove")
         remove_address_button.clicked.connect(self.remove_address_tx_history_peg_in)
+        remove_address_button.setMaximumWidth(100)
         vbox.addWidget(remove_address_button)
 
         refresh_button = QPushButton("Refresh")
         refresh_button.clicked.connect(self.refresh_tx_history_peg_in)
+        refresh_button.setMaximumWidth(100)
         vbox.addWidget(refresh_button)
+
+        vbox.addStretch()
 
         widget.setLayout(vbox)
         return widget
@@ -584,17 +636,22 @@ class SBTC_Tab(QWidget):
         self.tx_history_peg_out_table.setHorizontalHeaderLabels(["ID", "Originator", "BTC Address", "Amount", "To Script", "Type", "Status", "Action"])
         vbox.addWidget(self.tx_history_peg_out_table)
 
-        add_address_out_button = QPushButton("Add Address")
+        add_address_out_button = QPushButton("Add")
         add_address_out_button.clicked.connect(self.add_address_tx_history_peg_out)
+        add_address_out_button.setMaximumWidth(100)
         vbox.addWidget(add_address_out_button)
 
-        remove_address_out_button = QPushButton("Remove Address")
+        remove_address_out_button = QPushButton("Remove")
         remove_address_out_button.clicked.connect(self.remove_address_tx_history_peg_out)
+        remove_address_out_button.setMaximumWidth(100)
         vbox.addWidget(remove_address_out_button)
 
         refresh_out_button = QPushButton("Refresh")
         refresh_out_button.clicked.connect(self.refresh_tx_history_peg_out)
+        refresh_out_button.setMaximumWidth(100)
         vbox.addWidget(refresh_out_button)
+
+        vbox.addStretch()
 
         widget.setLayout(vbox)
         return widget
