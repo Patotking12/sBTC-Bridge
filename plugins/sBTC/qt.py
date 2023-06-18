@@ -135,8 +135,9 @@ class SBTC_Tab(QWidget):
         amount_label = QLabel(_("BTC to Deposit:"))
         self.amount_input = QLineEdit()
         self.amount_input.setMaximumWidth(100)
+        self.amount_input.setPlaceholderText("BTC")
         amount_layout.addWidget(amount_label) 
-        amount_layout.addSpacing(19) 
+        amount_layout.addSpacing(23) 
         amount_layout.addWidget(self.amount_input)
         amount_layout.addStretch()  # Add a stretch to push the input field to the right
         vbox.addLayout(amount_layout)
@@ -145,11 +146,12 @@ class SBTC_Tab(QWidget):
         stx_address_layout = QHBoxLayout()
         stx_address_label = QLabel(_("STX Address:"))
         self.stx_address_input = QLineEdit()
-        self.stx_address_input.setMaximumWidth(500)  # Set the maximum width for the input field
+        self.stx_address_input.setMaximumWidth(500)
+        self.stx_address_input.setPlaceholderText("STX Address")  
         stx_address_layout.addWidget(stx_address_label)
-        stx_address_layout.addSpacing(32)
+        stx_address_layout.addSpacing(36)
         stx_address_layout.addWidget(self.stx_address_input)
-        stx_address_layout.addStretch()  # Add a stretch to push the input field to the right
+        stx_address_layout.addStretch()  
         vbox.addLayout(stx_address_layout)
         vbox.addSpacing(10)
 
@@ -160,7 +162,7 @@ class SBTC_Tab(QWidget):
         btc_wallet_address_layout.addWidget(btc_wallet_address_label)
         btc_wallet_address_layout.addSpacing(30)
         btc_wallet_address_layout.addWidget(self.btc_wallet_address_label)
-        btc_wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
+        btc_wallet_address_layout.addStretch()  
         vbox.addLayout(btc_wallet_address_layout)
         vbox.addSpacing(10)
 
@@ -171,14 +173,15 @@ class SBTC_Tab(QWidget):
         wallet_address_layout.addWidget(wallet_address_label)
         wallet_address_layout.addSpacing(35)
         wallet_address_layout.addWidget(self.wallet_address_label)
-        wallet_address_layout.addStretch()  # Add a stretch to push the label to the right
+        wallet_address_layout.addStretch() 
         vbox.addLayout(wallet_address_layout)
         vbox.addSpacing(10)
 
         address_layout = QHBoxLayout()
         address_label = QLabel(_("Recipient Address:"))
         self.address_input = QLineEdit()
-        self.address_input.setMaximumWidth(500)  # Set the maximum width for the input field
+        self.address_input.setMaximumWidth(500)  
+        self.address_input.setPlaceholderText("Will be automatically generated") 
         address_layout.addWidget(address_label)
         address_layout.addSpacing(5)
         address_layout.addWidget(self.address_input)
@@ -191,16 +194,15 @@ class SBTC_Tab(QWidget):
         fee_label = QLabel(_("Transaction Fee:"))
         self.fee_label = QLabel()
         self.fee_combo = QComboBox()
-        self.fee_combo.setMaximumWidth(300)  # Set the maximum width for the combo box
         fee_layout.addWidget(fee_label)
         fee_layout.addWidget(self.fee_label)
         fee_layout.addWidget(self.fee_combo)
-        fee_layout.addStretch()  # Add a stretch to push the input field to the right
+        fee_layout.addStretch()  
         vbox.addLayout(fee_layout)
         vbox.addSpacing(10)
 
 
-        generate_script_button = QPushButton("Generate Script")  # Create the "Generate Script" button
+        generate_script_button = QPushButton("Generate Script")  
         generate_script_button.clicked.connect(self.generate_script)  # Connect the button click signal to the generate_script method
         generate_script_button.setMaximumWidth(150)  # Set the maximum width for the button
         vbox.addWidget(generate_script_button)
@@ -214,6 +216,8 @@ class SBTC_Tab(QWidget):
         btc_wallet_address = self.fetch_btc_wallet_address(window)
         self.btc_wallet_address_label.setText(btc_wallet_address)
 
+        vbox.addStretch()
+
         widget.setLayout(vbox)
         return widget
 
@@ -222,9 +226,9 @@ class SBTC_Tab(QWidget):
         fee_estimates = self.fetch_fee_estimates()
         if fee_estimates:
             fee_options = [
-                f"Low: {fee_estimates['low_fee_per_kb'] / 1e8} BTC",
-                f"Medium: {fee_estimates['medium_fee_per_kb'] / 1e8} BTC",
-                f"High: {fee_estimates['high_fee_per_kb'] / 1e8} BTC"
+                f"{fee_estimates['low_fee_per_kb'] / 1e8}",
+                f"{fee_estimates['medium_fee_per_kb'] / 1e8}",
+                f"{fee_estimates['high_fee_per_kb'] / 1e8}"
             ]
             self.fee_combo.addItems(fee_options)
 
@@ -242,7 +246,6 @@ class SBTC_Tab(QWidget):
             reveal_pub_key = data['deposits']['revealPubKey']
             reclaim_pub_key = data['deposits']['reclaimPubKey']
 
-            # Store the keys for later use (you can choose how to store them)
             self.reveal_pub_key = reveal_pub_key
             self.reclaim_pub_key = reclaim_pub_key
 
@@ -278,7 +281,7 @@ class SBTC_Tab(QWidget):
 
             for address in addresses:
                 balance_tuple = wallet.get_addr_balance(address)
-                balance = balance_tuple[0]  # Access the confirmed balance from the tuple
+                balance = balance_tuple[0] 
                 if balance > max_balance:
                     max_balance = balance
                     address_with_max_balance = address
@@ -563,7 +566,6 @@ class SBTC_Tab(QWidget):
         self.tx_history_peg_in_table.setRowCount(0)
 
     def refresh_tx_history_peg_in(self):
-        # Assuming you have the addresses stored in the table
         for row in range(self.tx_history_peg_in_table.rowCount()):
             address = self.tx_history_peg_in_table.item(row, 0).text()
             self.fetch_tx_history_peg_in(address)
@@ -667,7 +669,6 @@ class SBTC_Tab(QWidget):
         self.tx_history_peg_out_table.setRowCount(0)
 
     def refresh_tx_history_peg_out(self):
-        # Assuming you have the addresses stored in the table
         for row in range(self.tx_history_peg_out_table.rowCount()):
             address = self.tx_history_peg_out_table.item(row, 0).text()
             self.fetch_tx_history_peg_out(address)
