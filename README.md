@@ -1,127 +1,178 @@
 # sBTC-Bridge
 
-This is a plugin for the Electrum wallet that allows you to interact with the Bitcoin sBTC bridge. 
+The sBTC-Bridge is a plugin for the Electrum wallet that enables interaction with the Bitcoin sBTC bridge. 
 
-The plugin provides features such as depositing BTC, reclaiming deposits, revealing deposits, withdrawing sBTC, reclaiming withdrawals, and viewing transaction history.
+This plugin offers a range of features, including depositing BTC to obtain sBTC, reclaiming deposits, withdrawing sBTC to obtain BTC, reclaiming withdrawals, viewing transaction history, and tracking wallet balances for STX and sBTC.
+
+**Prerequisites**
+
+Before using the sBTC-Bridge plugin, make sure you have the following:
+
+- Python 3.7 or higher
+- Electrum Wallet
 
 **Recommended**
 
-Since this is still in production we do everything in Testnet so please get some BTC for testnet here: https://coinfaucet.eu/en/btc-testnet/
+Since the plugin is currently in production, all operations are performed on the Testnet. To proceed, obtain testnet BTC from https://coinfaucet.eu/en/btc-testnet/
 
 **Installation**
 
-Clone the repository `git clone https://github.com/Patotking12/sBTC-Bridge.git` 
+To install the sBTC-Bridge plugin, follow these steps:
 
-For installation of electrum wallet please follow the instructions here `https://github.com/spesmilo/electrum`
+1. Clone the repository: git clone https://github.com/Patotking12/sBTC-Bridge.git
 
-Launch Electrum on testnet `python3 run_electrum --testnet`, go to "Tools" > "Plugins" in the menu, and enable the "sBTC Plugin", close and reopen the wallet, be patient it takes some time to load all the information.
+2. Install the Electrum wallet by referring to the instructions available at https://github.com/spesmilo/electrum.
 
-![Screenshot 2023-06-17 at 13 25 15](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/90514423-0035-43fe-adeb-b21979eb2a65)
+3. Launch Electrum on the testnet by running the command: `python3 run_electrum --testnet`
 
-**Requirements**
+4. In the Electrum wallet, go to "Tools" > "Plugins" in the menu and enable the "sBTC Plugin".
 
-Python 3.7 or higher
-Electrum Wallet
+5. Close and reopen the wallet.
+
+<img width="1271" alt="Screenshot 2023-06-18 at 14 58 48" src="https://github.com/Patotking12/sBTC-Bridge/assets/108552266/6199c32a-fe7c-4d31-b278-ec33ca51c9aa">
+
+
+<img width="1271" alt="Screenshot 2023-06-18 at 14 58 51" src="https://github.com/Patotking12/sBTC-Bridge/assets/108552266/f3dfc594-ed61-4372-8bf0-e6ebfa39406b">
+
 
 **Usage**
 
-Open Electrum wallet on testnet `python3 run_electrum --testnet`.
-
-Go to "Tools" > "Plugins" in the menu and select "sBTC Plugin".
-
-The plugin will add a new tab called "sBTC" to the Electrum wallet interface.
-
-Close and reopen the wallet, be patient it takes some time to load all the information.
+- The plugin will add a new tab called "sBTC" to the Electrum wallet interface.
 
 Use the different tabs within the "sBTC" tab to perform various operations.
 
-![Screenshot 2023-06-17 at 13 25 37](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/76978117-c1ad-4813-afa3-50ac40f00114)
-
 **Deposit**
 
-The "Deposit" tab contains all the functionalities for depositing, reclaiming and tracking your peg in transactions
+The "Deposit" tab within the "sBTC" tab provides functionalities for depositing, reclaiming, and tracking peg-in transactions.
 
 **Deposit BTC**
 
-The "Deposit BTC" tab allows you to deposit BTC to the sBTC bridge.
+To deposit BTC into the sBTC bridge, follow these steps:
 
-Enter the amount of BTC to deposit in the "Amount (BTC)" field.
+1. Go to the "Deposit BTC" tab.
 
-Enter your associated STX address in the "Associated STX Address" field.
+2. Enter the desired amount of BTC to deposit in the "BTC to Deposit" field.
 
-Your Address with the highest BTC amount will be displayed.
+3. Provide your STX address in the "STX Address" field.
 
-Enter the recipient address in the "Recipient Address" field. (Pending of the API endpoint to generate this, for now we can manually add any address and send BTC to it)
+4. The address with the highest BTC amount from withing Electrum will be displayed, since that is the one that Electrum will use to send the BTC.
 
-Select the transaction fee from the "Transaction Fee (BTC)" dropdown.
+5. Click the "Generate Script" button, and the plugin will automatically start fetching the information it needs with the information you inputed to create the Script you will send the BTC to.
 
-Click the "Deposit BTC" button.
+6. This will take some time, since the plugin is fetching all the information it needs and processing it, please be patient.
 
-Enter your wallet password when prompted.
+7. Manually enter the recipient address in the "Recipient Address" field. (Note: This step is temporary until the API endpoint generates this automatically. For the time being, we can add any BTC address and send BTC)
 
-The transaction will be sent, and a confirmation message will be displayed and will show in the Electrum History tab.
+8. Choose the transaction fee from the "Transaction Fee" dropdown menu, it will have 3 options: Low, Medium and High fee.
 
-![Screenshot 2023-06-17 at 13 25 57](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/a6f93944-4392-4a75-9e8d-24fb0909a0ad)
+9. Click the "Deposit BTC" button.
+
+10. Enter your wallet password when prompted.
+
+11. The transaction will be sent, and a confirmation message will be displayed. You can also check the Electrum History tab for the transaction details. Or add your STX address to the "Tx history peg in" tab to track all transactions related to sBTC Bridge.
+
+<img width="1100" alt="Screenshot 2023-06-17 at 21 30 11" src="https://github.com/Patotking12/sBTC-Bridge/assets/108552266/73159821-1acc-486c-8f58-7854f344de57">
+
 
 **Tx history peg in**
 
-The "Tx history peg in" tab displays the transaction history for peg-in transactions. You can only track a single address at a time. 
+The "Tx history peg in" tab displays the transaction history for peg-in transactions. You can track a single address at a time.
 
-You are able to reclaim a Deposit. 
+To interact with the transaction history, follow these steps:
 
-Click the "Add Address" button to add an address to the table.
+1. Click the "Add" button to add an STX address to the table.
 
-Click the "Remove Address" button to clear the table.
+2. You will be prompted to input the STX address you want to track the transactions from.
 
-Click the "Refresh" button to fetch and display the transaction history for the addresses.
+3. The Plugin will start fetching your transactions, this may take some time, so be patient.
 
-![Screenshot 2023-06-17 at 13 29 41](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/32fcaf29-9f0e-4ff6-933a-244258db748f)
+4. All the peg in transactions will be displayed, showing: 
+  - ID
+  - Originator
+  - BTC Address
+  - Amount
+  - To Script
+  - Type
+  - Status
+  - Action
+    
+5. If you have a transaction in "reclaimed" status, a "Reclaim" button will be displayed, that when clicked it will start the reclaim action and your BTC will be refunded to the BTC address it was deposited from.
+
+6. Click the "Remove" button to clear the table.
+
+7. Click the "Refresh" button to fetch and update the transaction history for the address.
+
+![Screenshot 2023-06-18 at 15 05 07](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/341510fd-c28a-43fb-9e9d-d9a48d44b64b)
+
 
 **Withdraw**
 
-The "Withdraw" tab contains all the functionalities for withdrawing, reclaiming and tracking your peg out transactions
+The "Withdraw" tab within the "sBTC" tab offers functionalities for withdrawing, reclaiming, and tracking peg-out transactions.
 
 **Withdraw BTC**
 
-The "Withdraw BTC" tab allows you to withdraw sBTC for BTC.
+To withdraw sBTC and obtain BTC, follow these steps:
 
-Enter the amount of sBTC to withdraw in the "BTC Amount to Withdraw" field. 
+1. Go to the "Withdraw BTC" tab.
 
-Enter your STX address in the "STX Address" field.
+2. Enter the desired amount of sBTC to withdraw in the "BTC to Withdraw" field.
 
-Click the "Withdraw sBTC for BTC" button. (Waiting for the API endpoint)
+3. Provide your STX address in the "STX Address" field.
 
-The withdrawal process will be initiated.
+4. Click the "Withdraw BTC" button. (This step is awaiting the API endpoint.)
 
-![Screenshot 2023-06-17 at 13 30 14](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/9ce43351-9ce4-4c62-9c2e-45d1f1740fec)
+5. The withdrawal process will be initiated.
+
+<img width="1100" alt="Screenshot 2023-06-17 at 21 30 35" src="https://github.com/Patotking12/sBTC-Bridge/assets/108552266/791f33db-560e-49b9-a347-746b3498f92d">
+
 
 **Tx history peg out**
 
-The "Tx history peg in" tab displays the transaction history for peg-in transactions. You can only track a single address at a time
+The "Tx history peg out" tab displays the transaction history for peg-out transactions. You can track a single address at a time.
 
-You are able to reclaim a Withdraw. 
+To interact with the transaction history, follow these steps:
 
-Click the "Add Address" button to add an address to the table.
+1. Click the "Add" button to add an STX address to the table.
 
-Click the "Remove Address" button to clear the table.
+2. You will be prompted to input the STX address you want to track the transactions from.
 
-Click the "Refresh" button to fetch and display the transaction history for the addresses.
+3. The Plugin will start fetching your transactions, this may take some time, so be patient.
 
-![Screenshot 2023-06-17 at 14 03 22](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/7f1d766a-1784-4612-853a-d8e5c892f337)
+4. All the peg out transactions will be displayed, showing: 
+  - ID
+  - Originator
+  - BTC Address
+  - Amount
+  - To Script
+  - Type
+  - Status
+  - Action
+    
+5. If you have a transaction in "reclaimed" status, a "Reclaim" button will be displayed, that when clicked it will start the reclaim action and your sBTC will be refunded to the STX address it was withdrawed from.
+
+6. Click the "Remove" button to clear the table.
+
+7. Click the "Refresh" button to fetch and update the transaction history for the address.
+
+![Screenshot 2023-06-18 at 15 05 11](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/b47d9699-74c2-431a-8a3a-024b86fadf3b)
+
 
 **Summary**
 
-The "Summary" tab provides an overview of your STX addresses balance for Stacks and sBTC.
+The "Summary" tab provides an overview of the wallet balances for Stacks and sBTC associated with your STX addresses.
 
-Enter an STX address in the "Add STX Address" field.
+To utilize the "Summary" tab, follow these steps:
 
-Click the "Add Address" button to add the address to the summary table. It will automatically fetch the balances, it takes some time so it won't display straight away.
+1. Enter an STX address in the "Add STX Address" field.
 
-The table will display the STX address, STX balance, and sBTC balance.
+3. Click the "Add" button to add the address to the summary table. Please note that fetching balances may take some time before they are displayed.
 
-Select a row in the table to remove an address using the "Remove Selected Address" button.
+4. The table will present the STX address, STX balance, and sBTC balance.
 
-![Screenshot 2023-06-17 at 13 32 10](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/15b9515b-a179-4743-a5f8-ccc4c1b848b1)
+5. Select a row in the table to remove an address using the "Remove" button.
+
+![Screenshot 2023-06-18 at 15 08 56](https://github.com/Patotking12/sBTC-Bridge/assets/108552266/f4614f7c-a4b1-4e09-a905-817ad4e44f3d)
+
 
 
 
