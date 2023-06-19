@@ -1,5 +1,21 @@
 # sBTC-Bridge
 
+**Disclosure**
+
+Due to updates and changes still being made to the API in general (endpoints, information structure, payloads) some of the functionality can be broken, it is constantly being updated until we have the final API version. Everything is working as of this writing. 
+
+Videos to show the functionality are here: 
+
+https://youtu.be/twWs_r54Y9Y
+
+https://youtu.be/8HNGzfTbTB4
+
+https://youtu.be/YUoQsYxdPJ8
+
+https://youtu.be/mYYxNw86gpU
+
+https://youtu.be/a6ZoGDgo9J0
+
 The sBTC-Bridge is a plugin for the Electrum wallet that enables interaction with the Bitcoin sBTC bridge. 
 
 This plugin offers a range of features, including depositing BTC to obtain sBTC, reclaiming deposits, withdrawing sBTC to obtain BTC, reclaiming withdrawals, viewing transaction history, and tracking wallet balances for STX and sBTC.
@@ -96,7 +112,7 @@ To interact with the transaction history, follow these steps:
   - Status
   - Action
     
-5. If you have a transaction in "reclaimed" status, a "Reclaim" button will be displayed, that when clicked it will start the reclaim action and your BTC will be refunded to the BTC address it was deposited from.
+5. If you have a transaction in "reclaimed" status, a "Reclaim" button will be displayed, that when clicked it will start the reclaim action for the ID you enter and your BTC will be refunded to the BTC address it was deposited from. (Waiting for the Stacks Python library to be able to sign messages)
 
 6. Click the "Remove" button to clear the table.
 
@@ -119,7 +135,7 @@ To withdraw sBTC and obtain BTC, follow these steps:
 
 3. Provide your STX address in the "STX Address" field.
 
-4. Click the "Withdraw BTC" button. (This step is awaiting the API endpoint.)
+4. Click the "Withdraw BTC" button. (This step is awaiting the API endpoint. And the Stacks Python library to be able to sign messages)
 
 5. The withdrawal process will be initiated.
 
